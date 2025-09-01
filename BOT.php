@@ -8,7 +8,6 @@ define("IDBot", explode(":", $API_KEY)[0]);
 
 
 
-echo file_get_contents("https://api.telegram.org/bot" . API_KEY . "/setwebhook?url=" . $_SERVER['SERVER_NAME'] . "" . $_SERVER['SCRIPT_NAME']);
 
 function replaceTextInJson($data, $search, $replace) {
     foreach ($data as $key => $value) {
@@ -4946,7 +4945,9 @@ function SETJSON16($INPUT){
 mkdir("RSHQ/ALLS/". USR_BOT) ;
 
 
-$update = json_decode(file_get_contents('php://input'));
+// استبدل السطر القديم بهذا الكود
+$update = isset($argv[1]) ? json_decode(base64_decode($argv[1])) : json_decode(file_get_contents('php://input'));
+
 if($update->message){
 	$message = $update->message;
 $message_id = $update->message->message_id;
@@ -11536,5 +11537,17 @@ SETJSON($rshq); SETJSON12($modes);
   
   unlink('J_' . USR_BOT . '.bot');
 
-  
+  // أضف هذا الكود في نهاية الملف بالكامل
+bot('deleteWebhook'); // هذا السطر مهم جداً، يقوم بإلغاء أي ويبهوك قديم لضمان عمل الطريقة الجديدة
+$offset = 0;
+while(true){
+    $updates = bot('getUpdates', ['offset' => $offset]);
+    foreach($updates->result as $update){
+        // هذا السطر يقوم باستدعاء وتشغيل نفس الملف من جديد مع كل رسالة
+        shell_exec('php ' . __FILE__ . ' "' . base64_encode(json_encode($update)) . '"');
+        $offset = $update->update_id + 1;
+    }
+    sleep(1); // استراحة بسيطة لمدة ثانية لمنع الضغط على الخادم
+}
+
 //الملف كتابه بيرو  @v44vv - @Sero_Bots
